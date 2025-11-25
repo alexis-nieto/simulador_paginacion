@@ -9,7 +9,7 @@ class PaginationSimulator:
         self.root.title("Simulador de Paginación")
         self.root.geometry("1200x800")
         
-        self.memory_manager = MemoryManager(total_memory=16384)
+        self.memory_manager = MemoryManager(total_memory=65536)
         
         self.demo_running = False
         self.demo_paused = False
@@ -72,13 +72,13 @@ class PaginationSimulator:
         frames = self.memory_manager.get_memory_status()
         
         # Grid configuration
-        cols = 8
+        cols = 16
         rows = len(frames) // cols
         if len(frames) % cols != 0:
             rows += 1
             
-        w = 60
-        h = 40
+        w = 50
+        h = 35
         start_x = 20
         start_y = 20
         
@@ -155,7 +155,7 @@ class PaginationSimulator:
         if self.demo_running:
             self.toggle_demo() # Stop demo if running
             
-        self.memory_manager = MemoryManager(total_memory=16384)
+        self.memory_manager = MemoryManager(total_memory=65536)
         self.update_memory_map()
         self.update_process_list()
 
