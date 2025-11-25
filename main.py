@@ -7,7 +7,7 @@ class PaginationSimulator:
     def __init__(self, root):
         self.root = root
         self.root.title("Simulador de Paginación")
-        self.root.geometry("1350x400")
+        self.root.geometry("1450x400")
         
         self.memory_manager = MemoryManager(total_memory=65536)
         
@@ -20,59 +20,90 @@ class PaginationSimulator:
         self.update_process_list()
 
     def setup_ui(self):
+        # Theme Setup
+        style = ttk.Style()
+        style.theme_use('clam')
+        
+        # Colors
+        bg_color = "#1E1E1E"
+        fg_color = "#E0E0E0"
+        accent_color = "#007ACC"
+        darker_bg = "#121212"
+        panel_bg = "#252526"
+        
+        self.root.configure(bg=bg_color)
+        
+        # Configure Styles
+        style.configure("TFrame", background=bg_color)
+        style.configure("TLabel", background=panel_bg, foreground=fg_color, font=("Segoe UI", 10))
+        style.configure("TLabelframe", background=panel_bg, foreground=accent_color, relief="flat")
+        style.configure("TLabelframe.Label", background=panel_bg, foreground=accent_color, font=("Segoe UI", 11, "bold"))
+        
+        style.configure("TButton", background=accent_color, foreground="white", font=("Segoe UI", 10, "bold"), borderwidth=0, focuscolor="none")
+        style.map("TButton", background=[('active', '#005A9E')])
+        
+        style.configure("Horizontal.TScale", background=panel_bg, troughcolor=darker_bg, sliderthickness=15)
+        
+        style.configure("Treeview", background=darker_bg, foreground=fg_color, fieldbackground=darker_bg, font=("Consolas", 10), rowheight=25)
+        style.configure("Treeview.Heading", background=panel_bg, foreground=fg_color, font=("Segoe UI", 10, "bold"), relief="flat")
+        style.map("Treeview.Heading", background=[('active', '#3E3E42')])
+        
         # Main Layout
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.pack(fill=tk.BOTH, expand=True)
         
         # Left Panel - Controls
-        left_panel = ttk.LabelFrame(main_frame, text="Controles", padding="10")
-        left_panel.pack(side=tk.LEFT, fill=tk.Y, padx=5)
+        left_panel = ttk.LabelFrame(main_frame, text="CONTROLES", padding="15")
+        left_panel.pack(side=tk.LEFT, fill=tk.Y, padx=10)
         
-        ttk.Button(left_panel, text="Agregar Proceso", command=self.add_process_dialog).pack(fill=tk.X, pady=5)
-        ttk.Button(left_panel, text="Eliminar Proceso", command=self.remove_process_dialog).pack(fill=tk.X, pady=5)
-        ttk.Button(left_panel, text="Reiniciar Memoria", command=self.reset_memory).pack(fill=tk.X, pady=5)
+        # Custom button style for left panel
+        btn_style = {"fill": tk.X, "pady": 8}
         
-        self.btn_demo = ttk.Button(left_panel, text="Iniciar Simulación Random", command=self.toggle_demo)
-        self.btn_demo.pack(fill=tk.X, pady=5)
+        ttk.Button(left_panel, text="AGREGAR PROCESO", command=self.add_process_dialog).pack(**btn_style)
+        ttk.Button(left_panel, text="ELIMINAR PROCESO", command=self.remove_process_dialog).pack(**btn_style)
+        ttk.Button(left_panel, text="REINICIAR MEMORIA", command=self.reset_memory).pack(**btn_style)
         
-        self.btn_pause = ttk.Button(left_panel, text="Pausar", command=self.toggle_pause, state=tk.DISABLED)
-        self.btn_pause.pack(fill=tk.X, pady=5)
+        self.btn_demo = ttk.Button(left_panel, text="INICIAR SIMULACIÓN", command=self.toggle_demo)
+        self.btn_demo.pack(**btn_style)
         
-        ttk.Separator(left_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
+        self.btn_pause = ttk.Button(left_panel, text="PAUSAR", command=self.toggle_pause, state=tk.DISABLED)
+        self.btn_pause.pack(**btn_style)
+        
+        ttk.Separator(left_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=20)
         
         # Speed Control
-        ttk.Label(left_panel, text="Velocidad Simulación:").pack(anchor=tk.W, pady=(5,0))
+        ttk.Label(left_panel, text="VELOCIDAD SIMULACIÓN").pack(anchor=tk.W, pady=(5,5))
         self.speed_var = tk.DoubleVar(value=1.0)
         self.speed_scale = ttk.Scale(left_panel, from_=0.1, to=2.0, variable=self.speed_var, orient=tk.HORIZONTAL)
         self.speed_scale.pack(fill=tk.X, pady=5)
         
-        ttk.Separator(left_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
+        ttk.Separator(left_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=20)
         
-        self.stats_label = ttk.Label(left_panel, text="Memoria Libre: ...")
-        self.stats_label.pack(anchor=tk.W)
+        self.stats_label = ttk.Label(left_panel, text="MEMORIA LIBRE: ...", font=("Consolas", 10))
+        self.stats_label.pack(anchor=tk.W, pady=2)
         
-        self.frag_label = ttk.Label(left_panel, text="Fragmentación Interna: 0 KB")
-        self.frag_label.pack(anchor=tk.W)
+        self.frag_label = ttk.Label(left_panel, text="FRAGMENTACIÓN: 0 KB", font=("Consolas", 10))
+        self.frag_label.pack(anchor=tk.W, pady=2)
 
         # Center Panel - Memory Map
-        center_panel = ttk.LabelFrame(main_frame, text="Mapa de Memoria Física", padding="10")
-        center_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5)
+        center_panel = ttk.LabelFrame(main_frame, text="MAPA DE MEMORIA", padding="10")
+        center_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
         
-        self.canvas = tk.Canvas(center_panel, bg="white")
+        self.canvas = tk.Canvas(center_panel, bg=darker_bg, highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
         
         # Right Panel - Process List
-        right_panel = ttk.LabelFrame(main_frame, text="Tabla de Procesos", padding="10")
-        right_panel.pack(side=tk.LEFT, fill=tk.Y, padx=5)
+        right_panel = ttk.LabelFrame(main_frame, text="PROCESOS ACTIVOS", padding="10")
+        right_panel.pack(side=tk.LEFT, fill=tk.Y, padx=10)
         
         columns = ("PID", "Tamaño", "Páginas")
         self.tree = ttk.Treeview(right_panel, columns=columns, show="headings")
         self.tree.heading("PID", text="PID")
-        self.tree.heading("Tamaño", text="Tamaño (KB)")
-        self.tree.heading("Páginas", text="Páginas")
-        self.tree.column("PID", width=50)
-        self.tree.column("Tamaño", width=80)
-        self.tree.column("Páginas", width=60)
+        self.tree.heading("Tamaño", text="TAMAÑO")
+        self.tree.heading("Páginas", text="PÁGINAS")
+        self.tree.column("PID", width=60, anchor=tk.CENTER)
+        self.tree.column("Tamaño", width=100, anchor=tk.CENTER)
+        self.tree.column("Páginas", width=80, anchor=tk.CENTER)
         self.tree.pack(fill=tk.BOTH, expand=True)
 
     def update_memory_map(self):
@@ -96,32 +127,38 @@ class PaginationSimulator:
             
             x1 = start_x + c * w
             y1 = start_y + r * h
-            x2 = x1 + w
-            y2 = y1 + h
+            x2 = x1 + w - 2 # Gap
+            y2 = y1 + h - 2 # Gap
             
-            color = "white"
-            text = f"F{i}"
+            color = "#2D2D2D" # Empty frame color
+            outline = "#3E3E42"
+            text = f"{i}"
+            text_color = "#666666"
             
             if status == "OS":
-                color = "gray"
-                text += "\nOS"
+                color = "#FF3366" # Neon Pink
+                outline = "#FF3366"
+                text = "OS"
+                text_color = "white"
             elif status is not None:
                 # Find process color
                 process = self.memory_manager.processes.get(status)
                 if process:
                     color = process.color
-                    text += f"\nP{status}"
+                    outline = color
+                    text = f"P{status}"
+                    text_color = "black" # Contrast for bright neon colors
             
-            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
-            self.canvas.create_text((x1+x2)/2, (y1+y2)/2, text=text, font=("Arial", 8))
+            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline=outline, width=1)
+            self.canvas.create_text((x1+x2)/2, (y1+y2)/2, text=text, font=("Consolas", 8), fill=text_color)
 
         # Update stats
         free_frames = frames.count(None)
         free_mem = free_frames * self.memory_manager.page_size
-        self.stats_label.config(text=f"Memoria Libre: {free_mem} KB")
+        self.stats_label.config(text=f"MEMORIA LIBRE: {free_mem} KB")
         
         frag_info = self.memory_manager.get_fragmentation_info()
-        self.frag_label.config(text=f"Fragmentación Interna: {frag_info['total_internal_fragmentation']} KB")
+        self.frag_label.config(text=f"FRAGMENTACIÓN: {frag_info['total_internal_fragmentation']} KB")
 
     def update_process_list(self):
         for item in self.tree.get_children():
@@ -137,9 +174,11 @@ class PaginationSimulator:
         size = simpledialog.askinteger("Nuevo Proceso", "Ingrese Tamaño (KB):")
         if size is None: return
         
-        # Random pastel color
-        r = lambda: random.randint(128, 255)
-        color = '#%02X%02X%02X' % (r(),r(),r())
+        # Neon color
+        import colorsys
+        hue = random.random()
+        r, g, b = colorsys.hsv_to_rgb(hue, 0.8, 1.0)
+        color = '#%02X%02X%02X' % (int(r*255), int(g*255), int(b*255))
         
         try:
             self.memory_manager.allocate(pid, size, color)
@@ -256,8 +295,13 @@ class PaginationSimulator:
                     pid = random.randint(100, 999)
                 
                 size = random.randint(200, 3000)
-                r = lambda: random.randint(128, 255)
-                color = '#%02X%02X%02X' % (r(),r(),r())
+                # Generate Neon Colors (High Saturation, High Brightness)
+                # HSV to RGB conversion simplified:
+                # Pick a random hue, high saturation, high value
+                import colorsys
+                hue = random.random()
+                r, g, b = colorsys.hsv_to_rgb(hue, 0.8, 1.0)
+                color = '#%02X%02X%02X' % (int(r*255), int(g*255), int(b*255))
                 
                 self.memory_manager.allocate(pid, size, color)
             else:
