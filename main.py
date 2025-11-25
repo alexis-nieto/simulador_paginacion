@@ -11,6 +11,10 @@ class PaginationSimulator:
         
         self.memory_manager = MemoryManager(total_memory=16384)
         
+        self.demo_running = False
+        self.demo_paused = False
+        self.demo_task = None
+        
         self.setup_ui()
         self.update_memory_map()
         self.update_process_list()
@@ -27,7 +31,12 @@ class PaginationSimulator:
         ttk.Button(left_panel, text="Agregar Proceso", command=self.add_process_dialog).pack(fill=tk.X, pady=5)
         ttk.Button(left_panel, text="Eliminar Proceso", command=self.remove_process_dialog).pack(fill=tk.X, pady=5)
         ttk.Button(left_panel, text="Reiniciar Memoria", command=self.reset_memory).pack(fill=tk.X, pady=5)
-        ttk.Button(left_panel, text="Demo Automático", command=self.run_demo).pack(fill=tk.X, pady=5)
+        
+        self.btn_demo = ttk.Button(left_panel, text="Iniciar Demo Random", command=self.toggle_demo)
+        self.btn_demo.pack(fill=tk.X, pady=5)
+        
+        self.btn_pause = ttk.Button(left_panel, text="Pausar", command=self.toggle_pause, state=tk.DISABLED)
+        self.btn_pause.pack(fill=tk.X, pady=5)
         
         ttk.Separator(left_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
         
@@ -143,37 +152,81 @@ class PaginationSimulator:
             messagebox.showerror("Error", str(e))
 
     def reset_memory(self):
+        if self.demo_running:
+            self.toggle_demo() # Stop demo if running
+            
         self.memory_manager = MemoryManager(total_memory=16384)
         self.update_memory_map()
         self.update_process_list()
 
-    def run_demo(self):
-        self.reset_memory()
+    def toggle_demo(self):
+        if self.demo_running:
+            # Stop
+            self.demo_running = False
+            self.demo_paused = False
+            if self.demo_task:
+                self.root.after_cancel(self.demo_task)
+                self.demo_task = None
+            self.btn_demo.config(text="Iniciar Demo Random")
+            self.btn_pause.config(state=tk.DISABLED, text="Pausar")
+        else:
+            # Start
+            self.demo_running = True
+            self.demo_paused = False
+            self.btn_demo.config(text="Detener Demo")
+            self.btn_pause.config(state=tk.NORMAL, text="Pausar")
+            self.demo_step()
+
+    def toggle_pause(self):
+        if not self.demo_running: return
         
-        # Sequence of actions
-        steps = [
-            (1000, lambda: self.memory_manager.allocate(101, 2000, "#FFB3BA")), # P1 (Pink)
-            (2000, lambda: self.memory_manager.allocate(102, 3000, "#BAFFC9")), # P2 (Green)
-            (3000, lambda: self.memory_manager.allocate(103, 1500, "#BAE1FF")), # P3 (Blue)
-            (4000, lambda: self.memory_manager.allocate(104, 2500, "#FFFFBA")), # P4 (Yellow)
-            (5000, lambda: self.memory_manager.deallocate(102)), # Remove P2
-            (6000, lambda: self.memory_manager.allocate(105, 1000, "#E2BAFF")), # P5 (Purple)
-            (7000, lambda: self.memory_manager.allocate(106, 1800, "#FFDFBA")), # P6 (Orange)
-            (8000, lambda: self.memory_manager.deallocate(101)), # Remove P1
-            (9000, lambda: self.memory_manager.deallocate(104)), # Remove P4
-            (10000, lambda: self.memory_manager.allocate(107, 4000, "#BAFFFF")), # P7 (Cyan)
-        ]
-        
-        for delay, action in steps:
-            def step_wrapper(act=action):
-                try:
-                    act()
-                    self.update_memory_map()
-                    self.update_process_list()
-                except Exception as e:
-                    print(f"Demo Error: {e}")
+        if self.demo_paused:
+            self.demo_paused = False
+            self.btn_pause.config(text="Pausar")
+            self.demo_step()
+        else:
+            self.demo_paused = True
+            self.btn_pause.config(text="Continuar")
+            if self.demo_task:
+                self.root.after_cancel(self.demo_task)
+                self.demo_task = None
+
+    def demo_step(self):
+        if not self.demo_running or self.demo_paused:
+            return
+
+        try:
+            # 70% chance to add, 30% to remove (if any exist)
+            action = "add"
+            if self.memory_manager.processes and random.random() < 0.3:
+                action = "remove"
             
-            self.root.after(delay, step_wrapper)
+            if action == "add":
+                # Generate random process
+                pid = random.randint(100, 999)
+                while pid in self.memory_manager.processes:
+                    pid = random.randint(100, 999)
+                
+                size = random.randint(200, 3000)
+                r = lambda: random.randint(128, 255)
+                color = '#%02X%02X%02X' % (r(),r(),r())
+                
+                self.memory_manager.allocate(pid, size, color)
+            else:
+                # Remove random process
+                pid = random.choice(list(self.memory_manager.processes.keys()))
+                self.memory_manager.deallocate(pid)
+                
+            self.update_memory_map()
+            self.update_process_list()
+            
+        except Exception as e:
+            # Ignore memory errors in demo, just try again later
+            pass
+            
+        # Schedule next step (random delay 500ms - 1500ms)
+        delay = random.randint(500, 1500)
+        self.demo_task = self.root.after(delay, self.demo_step)
 
 def main():
     root = tk.Tk()
