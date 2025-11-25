@@ -40,6 +40,14 @@ class PaginationSimulator:
         
         ttk.Separator(left_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
         
+        # Speed Control
+        ttk.Label(left_panel, text="Velocidad Simulación:").pack(anchor=tk.W, pady=(5,0))
+        self.speed_var = tk.DoubleVar(value=1.0)
+        self.speed_scale = ttk.Scale(left_panel, from_=0.1, to=2.0, variable=self.speed_var, orient=tk.HORIZONTAL)
+        self.speed_scale.pack(fill=tk.X, pady=5)
+        
+        ttk.Separator(left_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
+        
         self.stats_label = ttk.Label(left_panel, text="Memoria Libre: ...")
         self.stats_label.pack(anchor=tk.W)
         
@@ -264,8 +272,17 @@ class PaginationSimulator:
             # Ignore memory errors in demo, just try again later
             pass
             
-        # Schedule next step (random delay 500ms - 1500ms)
-        delay = random.randint(500, 1500)
+        # Schedule next step (base delay 1000ms * speed factor)
+        # Lower value on slider = Faster (smaller delay)
+        # But slider is 0.1 to 2.0. Let's say 1.0 is normal.
+        # Actually, usually slider "Speed" means higher is faster.
+        # But here I implemented "Delay Multiplier" effectively.
+        # Let's invert it for UX: Higher slider = Faster speed = Lower delay.
+        # Wait, the plan said "Range: 0.1 (Fast) to 2.0 (Slow)". So it's a "Delay Factor".
+        # I'll stick to that.
+        
+        base_delay = 1000
+        delay = int(base_delay * self.speed_var.get())
         self.demo_task = self.root.after(delay, self.demo_step)
 
 def main():
