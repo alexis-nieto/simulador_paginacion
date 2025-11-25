@@ -32,7 +32,7 @@ class PaginationSimulator:
         ttk.Button(left_panel, text="Eliminar Proceso", command=self.remove_process_dialog).pack(fill=tk.X, pady=5)
         ttk.Button(left_panel, text="Reiniciar Memoria", command=self.reset_memory).pack(fill=tk.X, pady=5)
         
-        self.btn_demo = ttk.Button(left_panel, text="Iniciar Demo Random", command=self.toggle_demo)
+        self.btn_demo = ttk.Button(left_panel, text="Iniciar Simulación Random", command=self.toggle_demo)
         self.btn_demo.pack(fill=tk.X, pady=5)
         
         self.btn_pause = ttk.Button(left_panel, text="Pausar", command=self.toggle_pause, state=tk.DISABLED)
@@ -221,7 +221,7 @@ class PaginationSimulator:
             # Start
             self.demo_running = True
             self.demo_paused = False
-            self.btn_demo.config(text="Detener Demo")
+            self.btn_demo.config(text="Detener")
             self.btn_pause.config(state=tk.NORMAL, text="Pausar")
             self.demo_step()
 
