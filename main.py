@@ -7,7 +7,7 @@ class PaginationSimulator:
     def __init__(self, root):
         self.root = root
         self.root.title("Simulador de Paginación")
-        self.root.geometry("1200x800")
+        self.root.geometry("1350x400")
         
         self.memory_manager = MemoryManager(total_memory=65536)
         
@@ -141,15 +141,55 @@ class PaginationSimulator:
             messagebox.showerror("Error", str(e))
 
     def remove_process_dialog(self):
-        pid = simpledialog.askinteger("Eliminar Proceso", "Ingrese ID del Proceso a eliminar:")
-        if pid is None: return
+        if not self.memory_manager.processes:
+            messagebox.showinfo("Info", "No hay procesos para eliminar.")
+            return
+
+        # Custom dialog window
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Eliminar Proceso")
+        dialog.geometry("300x400")
         
-        try:
-            self.memory_manager.deallocate(pid)
-            self.update_memory_map()
-            self.update_process_list()
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        lbl = ttk.Label(dialog, text="Seleccione un proceso para eliminar:")
+        lbl.pack(pady=5)
+        
+        # Listbox with scrollbar
+        frame = ttk.Frame(dialog)
+        frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        scrollbar = ttk.Scrollbar(frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        listbox = tk.Listbox(frame, yscrollcommand=scrollbar.set, font=("Arial", 10))
+        listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=listbox.yview)
+        
+        # Populate listbox
+        pids = []
+        for pid, process in self.memory_manager.processes.items():
+            text = f"PID: {pid} | Size: {process.size} KB"
+            listbox.insert(tk.END, text)
+            listbox.itemconfig(tk.END, {'bg': process.color})
+            pids.append(pid)
+            
+        def on_delete():
+            selection = listbox.curselection()
+            if not selection:
+                return
+            
+            index = selection[0]
+            pid_to_remove = pids[index]
+            
+            try:
+                self.memory_manager.deallocate(pid_to_remove)
+                self.update_memory_map()
+                self.update_process_list()
+                dialog.destroy()
+            except Exception as e:
+                messagebox.showerror("Error", str(e))
+                
+        btn = ttk.Button(dialog, text="Eliminar", command=on_delete)
+        btn.pack(pady=10)
 
     def reset_memory(self):
         if self.demo_running:
