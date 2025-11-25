@@ -7,9 +7,9 @@ class PaginationSimulator:
     def __init__(self, root):
         self.root = root
         self.root.title("Simulador de Paginación")
-        self.root.geometry("1000x600")
+        self.root.geometry("1200x800")
         
-        self.memory_manager = MemoryManager()
+        self.memory_manager = MemoryManager(total_memory=16384)
         
         self.setup_ui()
         self.update_memory_map()
@@ -27,6 +27,7 @@ class PaginationSimulator:
         ttk.Button(left_panel, text="Agregar Proceso", command=self.add_process_dialog).pack(fill=tk.X, pady=5)
         ttk.Button(left_panel, text="Eliminar Proceso", command=self.remove_process_dialog).pack(fill=tk.X, pady=5)
         ttk.Button(left_panel, text="Reiniciar Memoria", command=self.reset_memory).pack(fill=tk.X, pady=5)
+        ttk.Button(left_panel, text="Demo Automático", command=self.run_demo).pack(fill=tk.X, pady=5)
         
         ttk.Separator(left_panel, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
         
@@ -142,9 +143,37 @@ class PaginationSimulator:
             messagebox.showerror("Error", str(e))
 
     def reset_memory(self):
-        self.memory_manager = MemoryManager()
+        self.memory_manager = MemoryManager(total_memory=16384)
         self.update_memory_map()
         self.update_process_list()
+
+    def run_demo(self):
+        self.reset_memory()
+        
+        # Sequence of actions
+        steps = [
+            (1000, lambda: self.memory_manager.allocate(101, 2000, "#FFB3BA")), # P1 (Pink)
+            (2000, lambda: self.memory_manager.allocate(102, 3000, "#BAFFC9")), # P2 (Green)
+            (3000, lambda: self.memory_manager.allocate(103, 1500, "#BAE1FF")), # P3 (Blue)
+            (4000, lambda: self.memory_manager.allocate(104, 2500, "#FFFFBA")), # P4 (Yellow)
+            (5000, lambda: self.memory_manager.deallocate(102)), # Remove P2
+            (6000, lambda: self.memory_manager.allocate(105, 1000, "#E2BAFF")), # P5 (Purple)
+            (7000, lambda: self.memory_manager.allocate(106, 1800, "#FFDFBA")), # P6 (Orange)
+            (8000, lambda: self.memory_manager.deallocate(101)), # Remove P1
+            (9000, lambda: self.memory_manager.deallocate(104)), # Remove P4
+            (10000, lambda: self.memory_manager.allocate(107, 4000, "#BAFFFF")), # P7 (Cyan)
+        ]
+        
+        for delay, action in steps:
+            def step_wrapper(act=action):
+                try:
+                    act()
+                    self.update_memory_map()
+                    self.update_process_list()
+                except Exception as e:
+                    print(f"Demo Error: {e}")
+            
+            self.root.after(delay, step_wrapper)
 
 def main():
     root = tk.Tk()
