@@ -1,4 +1,4 @@
-# Simulador de Paginación de Memoria (Edición 2025)
+# Simulador de Paginación de Memoria
 
 Este proyecto es una simulación gráfica interactiva diseñada para demostrar los conceptos fundamentales de la gestión de memoria en Sistemas Operativos, específicamente la técnica de **Paginación**. Desarrollado en Python con una interfaz moderna basada en `tkinter`, permite visualizar en tiempo real cómo se asignan, liberan y gestionan los marcos de memoria.
 
